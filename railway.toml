@@ -1,7 +1,7 @@
 # Railway.toml - Molt.bot Configuration
 
 [build]
-builder = "DOCKERFILE"
+# Metal build system uses Dockerfile automatically
 dockerfilePath = "Dockerfile"
 
 [deploy]
