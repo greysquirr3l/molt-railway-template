@@ -1,0 +1,15 @@
+# Railway.toml - Molt.bot Configuration
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "/app/setup-system.sh"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+# Health check
+healthcheckPath = "/healthz"
+healthcheckTimeout = 100
+# Force redeploy Tue Jan 27 11:23:35 EST 2026
