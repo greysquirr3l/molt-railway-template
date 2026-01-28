@@ -9,7 +9,8 @@ startCommand = "/app/setup-system.sh"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
-# Health check
+# Health check - use port 8080 explicitly when TCP proxy is configured
 healthcheckPath = "/healthz"
 healthcheckTimeout = 100
-# Force redeploy Tue Jan 27 11:23:35 EST 2026
+# When using TCP proxy for SSH (port 22), the HTTP service runs on port 8080
+# Railway should check HTTP health on 8080, not the TCP proxy port

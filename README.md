@@ -20,10 +20,12 @@ A combined template that provides **SSH access** to a hardened Arch Linux contai
    - `SSH_PASSWORD` - Your SSH password (or use SSH keys)
    - `MOLTBOT_STATE_DIR=/data/.moltbot`
    - `MOLTBOT_WORKSPACE_DIR=/data/workspace`
+   - `HTTP_PORT=8080` - **Required when using TCP Proxy** (see below)
 
 4. **Configure TCP Proxy** for SSH:
    - Settings → Networking → TCP Proxy
    - Port: `22`
+   - **Important**: After enabling TCP Proxy, Railway sets `PORT=22`. You **must** set `HTTP_PORT=8080` as an environment variable so the web server and healthcheck work correctly.
    - **See [Port Reference Guide](../PORTS.md) for complete port details**
 
 5. **Deploy** and wait for build to complete
@@ -64,6 +66,7 @@ moltbot gateway
 | `SETUP_PASSWORD` | Password for `/setup` web wizard |
 | `SSH_USERNAME` | SSH login username |
 | `SSH_PASSWORD` | SSH login password |
+| `HTTP_PORT` | **Required when using TCP Proxy** - Set to `8080` |
 
 ### Recommended
 
@@ -99,6 +102,27 @@ disconnected (1008): unauthorized: gateway token missing
 ```
 
 **Solution**: The wrapper automatically sets both `gateway.auth.token` AND `gateway.remote.token` to the same value during setup. This allows the browser Control UI to authenticate properly with the gateway.
+
+### Non-Root User Fix
+
+This template also fixes the **file path issues from running as root**:
+
+**Problem**: Running molt.bot as root caused config files to scatter in `/root/.moltbot/` instead of persistent `/data/.moltbot/`.
+
+**Solution**: All molt.bot services run as a dedicated `moltbot` user (UID 1000) with proper ownership of `/data` directories. This ensures:
+
+- ✅ Config files persist across container restarts
+- ✅ Predictable file paths: `/data/.moltbot/moltbot.json`
+- ✅ Better security (services don't run as root)
+- ✅ Proper volume permissions
+
+You can verify this after deployment:
+
+```bash
+ssh user@domain -p port
+ps aux | grep server.js  # Should show 'moltbot' user, not 'root'
+ls -la /data/.moltbot     # Files owned by moltbot:moltbot
+```
 
 ## Remote Gateway Mode (Optional)
 
@@ -279,6 +303,19 @@ This template automatically fixes this! If you still see it:
 2. Verify credentials in environment variables
 3. Check service health in Railway
 4. Try different network (firewall issue)
+
+### Healthcheck Failing with TCP Proxy / Custom Domain
+
+**Symptom**: Deployment fails healthcheck after enabling TCP Proxy or custom domain
+
+**Cause**: When TCP Proxy is enabled on port 22, Railway sets `PORT=22`. The web server defaults to port 8080 when it detects this, but Railway's healthcheck needs to know which port to check.
+
+**Solution**:
+1. Add `HTTP_PORT=8080` to your Railway environment variables
+2. Redeploy the service
+3. The healthcheck will now correctly check port 8080
+
+**Why this happens**: Railway's TCP Proxy configures `PORT=22` for SSH, but the HTTP service runs on 8080. Setting `HTTP_PORT=8080` explicitly tells both the server and Railway's healthcheck which port to use.
 
 ### Data Lost After Redeploy
 

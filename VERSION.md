@@ -57,6 +57,7 @@ Even with version pinning, we use `pnpm install --no-frozen-lockfile` because:
 
 | Date | Version | Notes |
 |------|---------|-------|
+| 2026-01-28 | v2026.1.24 | Added dedicated moltbot user (non-root), fixed file paths |
 | 2026-01-27 | v2026.1.24 | Latest stable version |
 | 2026-01-27 | v2026.1.22 | Initial version, tested working |
 

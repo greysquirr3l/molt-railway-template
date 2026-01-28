@@ -121,6 +121,11 @@ RUN ssh-keygen -A
 # Configure sudoers for wheel group
 RUN echo "%wheel ALL=(ALL:ALL) ALL" >> /etc/sudoers
 
+# Create dedicated moltbot user for running services
+# UID/GID 1000 ensures consistent ownership across restarts
+RUN useradd -m -u 1000 -s /bin/bash -G wheel moltbot && \
+    echo "moltbot ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
 # Copy built moltbot
 WORKDIR /app
 COPY --from=moltbot-build /moltbot /moltbot
@@ -138,13 +143,15 @@ COPY wrapper/src ./src
 COPY setup-system.sh ssh-config.sh ./
 RUN chmod +x setup-system.sh ssh-config.sh
 
-# Set up directories
-RUN mkdir -p /data/.moltbot /data/workspace
+# Set up directories with proper ownership
+RUN mkdir -p /data/.moltbot /data/workspace /app && \
+    chown -R moltbot:moltbot /data /app /moltbot
 
 # Environment variables for moltbot
 ENV MOLTBOT_STATE_DIR=/data/.moltbot
 ENV MOLTBOT_WORKSPACE_DIR=/data/workspace
 ENV PORT=8080
+ENV HOME=/home/moltbot
 
 # Expose ports
 # Expose SSH and HTTP ports
